@@ -16,15 +16,15 @@ perl -i.bak -p -e "s/_WIN32_WINNT \>\= 0x600/_WIN32_WINNT \>\= 0xFFFF/g" crypto\
 perl -i.bak -p -e "s/\/MDd/\/MT/g" makefile
 perl -i.bak -p -e "s/\/MTd/\/MT/g" makefile
 perl -i.bak -p -e "s/\/MD/\/MT/g" makefile
-perl -i.bak -p -e "s/\/Zl/\/Z7/g" makefile
-perl -i.bak -p -e "s/\/Zi/\/Z7/g" makefile
+perl -i.bak -p -e "s/\/Zl/ /g" makefile
+perl -i.bak -p -e "s/\/Zi/ /g" makefile
 perl -i.bak -p -e "s/\/WX/\/W3/g" makefile
 
 perl -i.bak -p -e "s/\/MDd/\/MT/g" configdata.pm
 perl -i.bak -p -e "s/\/MTd/\/MT/g" configdata.pm
 perl -i.bak -p -e "s/\/MD/\/MT/g" configdata.pm
-perl -i.bak -p -e "s/\/Zl/\/Z7/g" configdata.pm
-perl -i.bak -p -e "s/\/Zi/\/Z7/g" configdata.pm
+perl -i.bak -p -e "s/\/Zl/ /g" configdata.pm
+perl -i.bak -p -e "s/\/Zi/ /g" configdata.pm
 perl -i.bak -p -e "s/\/WX/\/W3/g" configdata.pm
 
 echo #ifndef HEADER_DSO_CONF_H> crypto\include\internal\dso_conf.h
