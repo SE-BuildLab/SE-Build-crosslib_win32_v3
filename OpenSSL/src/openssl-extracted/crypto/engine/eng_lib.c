@@ -133,34 +133,40 @@ static ENGINE_CLEANUP_ITEM *int_cleanup_item(ENGINE_CLEANUP_CB *cb)
     return item;
 }
 
-void engine_cleanup_add_first(ENGINE_CLEANUP_CB *cb)
+int engine_cleanup_add_first(ENGINE_CLEANUP_CB *cb)
 {
     ENGINE_CLEANUP_ITEM *item;
 
     if (!int_cleanup_check(1))
-        return;
-    item = int_cleanup_item(cb);
-    if (item != NULL)
-        if (sk_ENGINE_CLEANUP_ITEM_insert(cleanup_stack, item, 0) <= 0)
-            OPENSSL_free(item);
-}
-
-void engine_cleanup_add_last(ENGINE_CLEANUP_CB *cb)
-{
-    ENGINE_CLEANUP_ITEM *item;
-    if (!int_cleanup_check(1))
-        return;
+        return 0;
     item = int_cleanup_item(cb);
     if (item != NULL) {
-        if (sk_ENGINE_CLEANUP_ITEM_push(cleanup_stack, item) <= 0)
-            OPENSSL_free(item);
+        if (sk_ENGINE_CLEANUP_ITEM_insert(cleanup_stack, item, 0))
+            return 1;
+        OPENSSL_free(item);
     }
+    return 0;
+}
+
+int engine_cleanup_add_last(ENGINE_CLEANUP_CB *cb)
+{
+    ENGINE_CLEANUP_ITEM *item;
+
+    if (!int_cleanup_check(1))
+        return 0;
+    item = int_cleanup_item(cb);
+    if (item != NULL) {
+        if (sk_ENGINE_CLEANUP_ITEM_push(cleanup_stack, item) > 0)
+            return 1;
+        OPENSSL_free(item);
+    }
+    return 0;
 }
 
 /* The API function that performs all cleanup */
 static void engine_cleanup_cb_free(ENGINE_CLEANUP_ITEM *item)
 {
-    (*(item->cb)) ();
+    (*(item->cb))();
     OPENSSL_free(item);
 }
 
@@ -168,7 +174,7 @@ void engine_cleanup_int(void)
 {
     if (int_cleanup_check(0)) {
         sk_ENGINE_CLEANUP_ITEM_pop_free(cleanup_stack,
-                                        engine_cleanup_cb_free);
+            engine_cleanup_cb_free);
         cleanup_stack = NULL;
     }
     CRYPTO_THREAD_lock_free(global_engine_lock);

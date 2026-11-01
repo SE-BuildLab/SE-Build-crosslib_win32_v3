@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2022 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2026 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -63,7 +63,7 @@ int DH_check_params(const DH *dh, int *ret)
      * validity tests.
      */
     return ossl_ffc_params_FIPS186_4_validate(dh->libctx, &dh->params,
-                                              FFC_PARAM_TYPE_DH, ret, NULL);
+        FFC_PARAM_TYPE_DH, ret, NULL);
 }
 #else
 int DH_check_params(const DH *dh, int *ret)
@@ -73,6 +73,14 @@ int DH_check_params(const DH *dh, int *ret)
     BN_CTX *ctx = NULL;
 
     *ret = 0;
+    /*
+     * A DH with no modulus or generator cannot be checked.  Report
+     * the failure via |*ret| rather than dereferencing NULL below.
+     */
+    if (dh->params.p == NULL || dh->params.g == NULL) {
+        *ret = DH_NOT_SUITABLE_GENERATOR | DH_CHECK_P_NOT_PRIME;
+        return 1;
+    }
     ctx = BN_CTX_new_ex(dh->libctx);
     if (ctx == NULL)
         goto err;
@@ -97,7 +105,7 @@ int DH_check_params(const DH *dh, int *ret)
         *ret |= DH_MODULUS_TOO_LARGE;
 
     ok = 1;
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     return ok;
@@ -143,14 +151,26 @@ int DH_check(const DH *dh, int *ret)
 #ifdef FIPS_MODULE
     return DH_check_params(dh, ret);
 #else
-    int ok = 0, r;
+    int ok = 0, r, q_good = 0;
     BN_CTX *ctx = NULL;
     BIGNUM *t1 = NULL, *t2 = NULL;
     int nid = DH_get_nid((DH *)dh);
 
     *ret = 0;
+    /* A DH with no modulus or generator cannot be checked. */
+    if (dh->params.p == NULL || dh->params.g == NULL) {
+        *ret = DH_NOT_SUITABLE_GENERATOR | DH_CHECK_P_NOT_PRIME;
+        return 1;
+    }
     if (nid != NID_undef)
         return 1;
+
+    /* Don't do any checks at all with an excessively large modulus */
+    if (BN_num_bits(dh->params.p) > OPENSSL_DH_CHECK_MAX_MODULUS_BITS) {
+        ERR_raise(ERR_LIB_DH, DH_R_MODULUS_TOO_LARGE);
+        *ret = DH_MODULUS_TOO_LARGE | DH_CHECK_P_NOT_PRIME;
+        return 0;
+    }
 
     if (!DH_check_params(dh, ret))
         return 0;
@@ -165,6 +185,13 @@ int DH_check(const DH *dh, int *ret)
         goto err;
 
     if (dh->params.q != NULL) {
+        if (BN_ucmp(dh->params.p, dh->params.q) > 0)
+            q_good = 1;
+        else
+            *ret |= DH_CHECK_INVALID_Q_VALUE;
+    }
+
+    if (q_good) {
         if (BN_cmp(dh->params.g, BN_value_one()) <= 0)
             *ret |= DH_NOT_SUITABLE_GENERATOR;
         else if (BN_cmp(dh->params.g, dh->params.p) >= 0)
@@ -206,7 +233,7 @@ int DH_check(const DH *dh, int *ret)
             *ret |= DH_CHECK_P_NOT_SAFE_PRIME;
     }
     ok = 1;
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     return ok;
@@ -235,6 +262,27 @@ int DH_check_pub_key_ex(const DH *dh, const BIGNUM *pub_key)
  */
 int DH_check_pub_key(const DH *dh, const BIGNUM *pub_key, int *ret)
 {
+    *ret = 0;
+    /*
+     * Without a modulus we cannot check anything; signal failure via
+     * |*ret| rather than crashing in BN_num_bits below.
+     */
+    if (dh->params.p == NULL) {
+        *ret = DH_CHECK_PUBKEY_INVALID;
+        return 1;
+    }
+    /* Don't do any checks at all with an excessively large modulus */
+    if (BN_num_bits(dh->params.p) > OPENSSL_DH_CHECK_MAX_MODULUS_BITS) {
+        ERR_raise(ERR_LIB_DH, DH_R_MODULUS_TOO_LARGE);
+        *ret = DH_MODULUS_TOO_LARGE | DH_CHECK_PUBKEY_INVALID;
+        return 0;
+    }
+
+    if (dh->params.q != NULL && BN_ucmp(dh->params.p, dh->params.q) < 0) {
+        *ret |= DH_CHECK_INVALID_Q_VALUE | DH_CHECK_PUBKEY_INVALID;
+        return 1;
+    }
+
     return ossl_ffc_validate_public_key(&dh->params, pub_key, ret);
 }
 
@@ -245,7 +293,8 @@ int DH_check_pub_key(const DH *dh, const BIGNUM *pub_key, int *ret)
  */
 int ossl_dh_check_pub_key_partial(const DH *dh, const BIGNUM *pub_key, int *ret)
 {
-    return ossl_ffc_validate_public_key_partial(&dh->params, pub_key, ret);
+    return ossl_ffc_validate_public_key_partial(&dh->params, pub_key, ret)
+        && *ret == 0;
 }
 
 int ossl_dh_check_priv_key(const DH *dh, const BIGNUM *priv_key, int *ret)

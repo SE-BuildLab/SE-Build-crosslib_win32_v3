@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# Copyright 2016-2020 The OpenSSL Project Authors. All Rights Reserved.
+# Copyright 2016-2026 The OpenSSL Project Authors. All Rights Reserved.
 #
 # Licensed under the Apache License 2.0 (the "License").  You may not use
 # this file except in compliance with the License.  You can obtain a copy
@@ -93,6 +93,13 @@ if (!$avx && $win64 && ($flavour =~ /masm/ || $ENV{ASM} =~ /ml64/) &&
 
 if (!$avx && `$ENV{CC} -v 2>&1` =~ /((?:clang|LLVM) version|.*based on LLVM) ([0-9]+\.[0-9]+)/) {
 	$avx = ($2>=3.0) + ($2>3.0);
+}
+
+if (!$avx && `$ENV{CC} -x c /dev/null -dM -E|grep __clang_major__`
+	=~ /#define __clang_major__.([0-9]+)/) {
+	if ($1) {
+		$avx = ($1>=11); #icx started with clang 11
+	}
 }
 
 open OUT,"| \"$^X\" \"$xlate\" $flavour \"$output\""
@@ -195,7 +202,7 @@ $code.=<<___	if ($avx>1);
 	bt	\$`5+32`,%r9		# AVX2?
 	cmovc	%rax,%r10
 ___
-$code.=<<___	if ($avx>3);
+$code.=<<___	if ($avx>3 && !$win64);
 	mov	\$`(1<<31|1<<21|1<<16)`,%rax
 	shr	\$32,%r9
 	and	%rax,%r9
@@ -2724,7 +2731,7 @@ $code.=<<___;
 .cfi_endproc
 .size	poly1305_blocks_avx512,.-poly1305_blocks_avx512
 ___
-if ($avx>3) {
+if ($avx>3 && !$win64) {
 ########################################################################
 # VPMADD52 version using 2^44 radix.
 #

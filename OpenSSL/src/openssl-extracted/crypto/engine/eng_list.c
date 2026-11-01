@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2021 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2001-2023 The OpenSSL Project Authors. All Rights Reserved.
  * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
@@ -78,12 +78,15 @@ static int engine_list_add(ENGINE *e)
             ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INTERNAL_LIST_ERROR);
             return 0;
         }
-        engine_list_head = e;
-        e->prev = NULL;
         /*
          * The first time the list allocates, we should register the cleanup.
          */
-        engine_cleanup_add_last(engine_list_cleanup);
+        if (!engine_cleanup_add_last(engine_list_cleanup)) {
+            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INTERNAL_LIST_ERROR);
+            return 0;
+        }
+        engine_list_head = e;
+        e->prev = NULL;
     } else {
         /* We are adding to the tail of an existing list. */
         if ((engine_list_tail == NULL) || (engine_list_tail->next != NULL)) {
@@ -136,7 +139,7 @@ static int engine_list_remove(ENGINE *e)
 
 /* Add engine to dynamic engine list. */
 int engine_add_dynamic_id(ENGINE *e, ENGINE_DYNAMIC_ID dynamic_id,
-                          int not_locked)
+    int not_locked)
 {
     int result = 0;
     ENGINE *iterator = NULL;
@@ -181,7 +184,7 @@ int engine_add_dynamic_id(ENGINE *e, ENGINE_DYNAMIC_ID dynamic_id,
     e->next_dyn = NULL;
     result = 1;
 
- err:
+err:
     if (not_locked)
         CRYPTO_THREAD_unlock(global_engine_lock);
     return result;
@@ -416,16 +419,11 @@ ENGINE *ENGINE_by_id(const char *id)
         if ((load_dir = ossl_safe_getenv("OPENSSL_ENGINES")) == NULL)
             load_dir = ENGINESDIR;
         iterator = ENGINE_by_id("dynamic");
-        if (!iterator || !ENGINE_ctrl_cmd_string(iterator, "ID", id, 0) ||
-            !ENGINE_ctrl_cmd_string(iterator, "DIR_LOAD", "2", 0) ||
-            !ENGINE_ctrl_cmd_string(iterator, "DIR_ADD",
-                                    load_dir, 0) ||
-            !ENGINE_ctrl_cmd_string(iterator, "LIST_ADD", "1", 0) ||
-            !ENGINE_ctrl_cmd_string(iterator, "LOAD", NULL, 0))
+        if (!iterator || !ENGINE_ctrl_cmd_string(iterator, "ID", id, 0) || !ENGINE_ctrl_cmd_string(iterator, "DIR_LOAD", "2", 0) || !ENGINE_ctrl_cmd_string(iterator, "DIR_ADD", load_dir, 0) || !ENGINE_ctrl_cmd_string(iterator, "LIST_ADD", "1", 0) || !ENGINE_ctrl_cmd_string(iterator, "LOAD", NULL, 0))
             goto notfound;
         return iterator;
     }
- notfound:
+notfound:
     ENGINE_free(iterator);
     ERR_raise_data(ERR_LIB_ENGINE, ENGINE_R_NO_SUCH_ENGINE, "id=%s", id);
     return NULL;

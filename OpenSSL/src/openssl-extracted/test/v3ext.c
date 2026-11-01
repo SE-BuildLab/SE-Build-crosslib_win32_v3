@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2016-2026 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -27,8 +27,8 @@ static int test_pathlen(void)
     int ret = 0;
 
     if (!TEST_ptr(b = BIO_new_file(infile, "r"))
-            || !TEST_ptr(x = PEM_read_bio_X509(b, NULL, NULL, NULL))
-            || !TEST_int_eq(pathlen = X509_get_pathlen(x), 6))
+        || !TEST_ptr(x = PEM_read_bio_X509(b, NULL, NULL, NULL))
+        || !TEST_int_eq(pathlen = X509_get_pathlen(x), 6))
         goto end;
 
     ret = 1;
@@ -48,12 +48,12 @@ static int test_asid(void)
     int testresult = 0;
 
     if (!TEST_ptr(asid1)
-            || !TEST_ptr(asid2)
-            || !TEST_ptr(asid3))
+        || !TEST_ptr(asid2)
+        || !TEST_ptr(asid3))
         goto err;
 
     if (!TEST_ptr(val1 = ASN1_INTEGER_new())
-            || !TEST_true(ASN1_INTEGER_set_int64(val1, 64496)))
+        || !TEST_true(ASN1_INTEGER_set_int64(val1, 64496)))
         goto err;
 
     if (!TEST_true(X509v3_asid_add_id_or_range(asid1, V3_ASID_ASNUM, val1, NULL)))
@@ -61,7 +61,7 @@ static int test_asid(void)
 
     val1 = NULL;
     if (!TEST_ptr(val2 = ASN1_INTEGER_new())
-            || !TEST_true(ASN1_INTEGER_set_int64(val2, 64497)))
+        || !TEST_true(ASN1_INTEGER_set_int64(val2, 64497)))
         goto err;
 
     if (!TEST_true(X509v3_asid_add_id_or_range(asid2, V3_ASID_ASNUM, val2, NULL)))
@@ -69,9 +69,9 @@ static int test_asid(void)
 
     val2 = NULL;
     if (!TEST_ptr(val1 = ASN1_INTEGER_new())
-            || !TEST_true(ASN1_INTEGER_set_int64(val1, 64496))
-            || !TEST_ptr(val2 = ASN1_INTEGER_new())
-            || !TEST_true(ASN1_INTEGER_set_int64(val2, 64497)))
+        || !TEST_true(ASN1_INTEGER_set_int64(val1, 64496))
+        || !TEST_ptr(val2 = ASN1_INTEGER_new())
+        || !TEST_true(ASN1_INTEGER_set_int64(val2, 64497)))
         goto err;
 
     /*
@@ -84,30 +84,30 @@ static int test_asid(void)
 
     /* Actual subsets */
     if (!TEST_true(X509v3_asid_subset(NULL, NULL))
-            || !TEST_true(X509v3_asid_subset(NULL, asid1))
-            || !TEST_true(X509v3_asid_subset(asid1, asid1))
-            || !TEST_true(X509v3_asid_subset(asid2, asid2))
-            || !TEST_true(X509v3_asid_subset(asid1, asid3))
-            || !TEST_true(X509v3_asid_subset(asid2, asid3))
-            || !TEST_true(X509v3_asid_subset(asid3, asid3))
-            || !TEST_true(X509v3_asid_subset(asid4, asid1))
-            || !TEST_true(X509v3_asid_subset(asid4, asid2))
-            || !TEST_true(X509v3_asid_subset(asid4, asid3)))
+        || !TEST_true(X509v3_asid_subset(NULL, asid1))
+        || !TEST_true(X509v3_asid_subset(asid1, asid1))
+        || !TEST_true(X509v3_asid_subset(asid2, asid2))
+        || !TEST_true(X509v3_asid_subset(asid1, asid3))
+        || !TEST_true(X509v3_asid_subset(asid2, asid3))
+        || !TEST_true(X509v3_asid_subset(asid3, asid3))
+        || !TEST_true(X509v3_asid_subset(asid4, asid1))
+        || !TEST_true(X509v3_asid_subset(asid4, asid2))
+        || !TEST_true(X509v3_asid_subset(asid4, asid3)))
         goto err;
 
     /* Not subsets */
     if (!TEST_false(X509v3_asid_subset(asid1, NULL))
-            || !TEST_false(X509v3_asid_subset(asid1, asid2))
-            || !TEST_false(X509v3_asid_subset(asid2, asid1))
-            || !TEST_false(X509v3_asid_subset(asid3, asid1))
-            || !TEST_false(X509v3_asid_subset(asid3, asid2))
-            || !TEST_false(X509v3_asid_subset(asid1, asid4))
-            || !TEST_false(X509v3_asid_subset(asid2, asid4))
-            || !TEST_false(X509v3_asid_subset(asid3, asid4)))
+        || !TEST_false(X509v3_asid_subset(asid1, asid2))
+        || !TEST_false(X509v3_asid_subset(asid2, asid1))
+        || !TEST_false(X509v3_asid_subset(asid3, asid1))
+        || !TEST_false(X509v3_asid_subset(asid3, asid2))
+        || !TEST_false(X509v3_asid_subset(asid1, asid4))
+        || !TEST_false(X509v3_asid_subset(asid2, asid4))
+        || !TEST_false(X509v3_asid_subset(asid3, asid4)))
         goto err;
 
     testresult = 1;
- err:
+err:
     ASN1_INTEGER_free(val1);
     ASN1_INTEGER_free(val2);
     ASIdentifiers_free(asid1);
@@ -123,24 +123,24 @@ static struct ip_ranges_st {
     const char *ip2;
     int rorp;
 } ranges[] = {
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.1", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.2", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.3", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.254", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.255", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV4, "192.168.0.1", "192.168.0.255", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV4, "192.168.0.1", "192.168.0.1", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV4, "192.168.0.0", "192.168.255.255", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV4, "192.168.1.0", "192.168.255.255", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::1", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::2", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::3", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::fffe", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::ffff", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV6, "2001:0db8::1", "2001:0db8::ffff", IPAddressOrRange_addressRange},
-    { IANA_AFI_IPV6, "2001:0db8::1", "2001:0db8::1", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV6, "2001:0db8::0:0", "2001:0db8::ffff:ffff", IPAddressOrRange_addressPrefix},
-    { IANA_AFI_IPV6, "2001:0db8::1:0", "2001:0db8::ffff:ffff", IPAddressOrRange_addressRange}
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.1", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.2", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.3", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.254", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.0.255", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV4, "192.168.0.1", "192.168.0.255", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV4, "192.168.0.1", "192.168.0.1", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV4, "192.168.0.0", "192.168.255.255", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV4, "192.168.1.0", "192.168.255.255", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::1", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::2", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::3", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::fffe", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV6, "2001:0db8::0", "2001:0db8::ffff", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV6, "2001:0db8::1", "2001:0db8::ffff", IPAddressOrRange_addressRange },
+    { IANA_AFI_IPV6, "2001:0db8::1", "2001:0db8::1", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV6, "2001:0db8::0:0", "2001:0db8::ffff:ffff", IPAddressOrRange_addressPrefix },
+    { IANA_AFI_IPV6, "2001:0db8::1:0", "2001:0db8::ffff:ffff", IPAddressOrRange_addressRange }
 };
 
 static int check_addr(IPAddrBlocks *addr, int type)
@@ -219,7 +219,7 @@ static int test_addr_ranges(void)
     }
 
     testresult = 1;
- end:
+end:
     sk_IPAddressFamily_pop_free(addr, IPAddressFamily_free);
     ASN1_OCTET_STRING_free(ip1);
     ASN1_OCTET_STRING_free(ip2);
@@ -261,52 +261,57 @@ static int test_addr_fam_len(void)
     keylen = 6;
     if ((f1 = IPAddressFamily_new()) == NULL)
         goto end;
-    if (f1->ipAddressChoice == NULL &&
-        (f1->ipAddressChoice = IPAddressChoice_new()) == NULL)
+    if (f1->ipAddressChoice == NULL && (f1->ipAddressChoice = IPAddressChoice_new()) == NULL)
         goto end;
-    if (f1->addressFamily == NULL &&
-        (f1->addressFamily = ASN1_OCTET_STRING_new()) == NULL)
+    if (f1->addressFamily == NULL && (f1->addressFamily = ASN1_OCTET_STRING_new()) == NULL)
         goto end;
     if (!ASN1_OCTET_STRING_set(f1->addressFamily, key, keylen))
         goto end;
+
+    /* Push and transfer memory ownership to stack */
     if (!sk_IPAddressFamily_push(addr, f1))
         goto end;
+    f1 = NULL;
 
     /* Shouldn't be able to canonize this as the len is > 3*/
     if (!TEST_false(X509v3_addr_canonize(addr)))
         goto end;
 
-    /* Create a well formed IPAddressFamily */
-    f1 = sk_IPAddressFamily_pop(addr);
-    IPAddressFamily_free(f1);
+    /* Pop and free the new stack element */
+    IPAddressFamily_free(sk_IPAddressFamily_pop(addr));
 
+    /* Create a well-formed IPAddressFamily */
     key[0] = (afi >> 8) & 0xFF;
     key[1] = afi & 0xFF;
     key[2] = 0x1;
     keylen = 3;
     if ((f1 = IPAddressFamily_new()) == NULL)
         goto end;
-    if (f1->ipAddressChoice == NULL &&
-        (f1->ipAddressChoice = IPAddressChoice_new()) == NULL)
+    if (f1->ipAddressChoice == NULL && (f1->ipAddressChoice = IPAddressChoice_new()) == NULL)
         goto end;
-    if (f1->addressFamily == NULL &&
-        (f1->addressFamily = ASN1_OCTET_STRING_new()) == NULL)
+    if (f1->addressFamily == NULL && (f1->addressFamily = ASN1_OCTET_STRING_new()) == NULL)
         goto end;
     if (!ASN1_OCTET_STRING_set(f1->addressFamily, key, keylen))
         goto end;
 
     /* Mark this as inheritance so we skip some of the is_canonize checks */
     f1->ipAddressChoice->type = IPAddressChoice_inherit;
+
+    /* Push and transfer memory ownership to stack */
     if (!sk_IPAddressFamily_push(addr, f1))
         goto end;
+    f1 = NULL;
 
     /* Should be able to canonize now */
     if (!TEST_true(X509v3_addr_canonize(addr)))
         goto end;
 
     testresult = 1;
-  end:
+end:
+    /* Free stack and any memory owned by detached element */
+    IPAddressFamily_free(f1);
     sk_IPAddressFamily_pop_free(addr, IPAddressFamily_free);
+
     ASN1_OCTET_STRING_free(ip1);
     ASN1_OCTET_STRING_free(ip2);
     return testresult;
@@ -367,12 +372,12 @@ static int test_ext_syntax(void)
     for (i = 0; i < OSSL_NELEM(extvalues); i++) {
         X509V3_CTX ctx;
         BIO *extbio = BIO_new_mem_buf(extvalues[i].value,
-                                      strlen(extvalues[i].value));
+            strlen(extvalues[i].value));
         CONF *conf;
         long eline;
 
         if (!TEST_ptr(extbio))
-            return 0 ;
+            return 0;
 
         conf = NCONF_new_ex(NULL, NULL);
         if (!TEST_ptr(conf)) {
@@ -387,14 +392,14 @@ static int test_ext_syntax(void)
 
             if (extvalues[i].pass) {
                 if (!TEST_true(X509V3_EXT_add_nconf(conf, &ctx, "default",
-                                                    NULL))) {
+                        NULL))) {
                     TEST_info("Value: %s", extvalues[i].value);
                     testresult = 0;
                 }
             } else {
                 ERR_set_mark();
                 if (!TEST_false(X509V3_EXT_add_nconf(conf, &ctx, "default",
-                                                     NULL))) {
+                        NULL))) {
                     testresult = 0;
                     TEST_info("Value: %s", extvalues[i].value);
                     ERR_clear_last_mark();
@@ -426,22 +431,22 @@ static int test_addr_subset(void)
             || !TEST_ptr(ip1[i] = a2i_IPADDRESS(ranges[i].ip1))
             || !TEST_ptr(ip2[i] = a2i_IPADDRESS(ranges[i].ip2))
             || !TEST_true(X509v3_addr_add_range(addr[i], ranges[i].afi, NULL,
-                                                ip1[i]->data, ip2[i]->data)))
+                ip1[i]->data, ip2[i]->data)))
             goto end;
     }
 
     ret = TEST_ptr(addrEmpty = sk_IPAddressFamily_new_null())
-          && TEST_true(X509v3_addr_subset(NULL, NULL))
-          && TEST_true(X509v3_addr_subset(NULL, addr[0]))
-          && TEST_true(X509v3_addr_subset(addrEmpty, addr[0]))
-          && TEST_true(X509v3_addr_subset(addr[0], addr[0]))
-          && TEST_true(X509v3_addr_subset(addr[0], addr[1]))
-          && TEST_true(X509v3_addr_subset(addr[0], addr[2]))
-          && TEST_true(X509v3_addr_subset(addr[1], addr[2]))
-          && TEST_false(X509v3_addr_subset(addr[0], NULL))
-          && TEST_false(X509v3_addr_subset(addr[1], addr[0]))
-          && TEST_false(X509v3_addr_subset(addr[2], addr[1]))
-          && TEST_false(X509v3_addr_subset(addr[0], addrEmpty));
+        && TEST_true(X509v3_addr_subset(NULL, NULL))
+        && TEST_true(X509v3_addr_subset(NULL, addr[0]))
+        && TEST_true(X509v3_addr_subset(addrEmpty, addr[0]))
+        && TEST_true(X509v3_addr_subset(addr[0], addr[0]))
+        && TEST_true(X509v3_addr_subset(addr[0], addr[1]))
+        && TEST_true(X509v3_addr_subset(addr[0], addr[2]))
+        && TEST_true(X509v3_addr_subset(addr[1], addr[2]))
+        && TEST_false(X509v3_addr_subset(addr[0], NULL))
+        && TEST_false(X509v3_addr_subset(addr[1], addr[0]))
+        && TEST_false(X509v3_addr_subset(addr[2], addr[1]))
+        && TEST_false(X509v3_addr_subset(addr[0], addrEmpty));
 end:
     sk_IPAddressFamily_pop_free(addrEmpty, IPAddressFamily_free);
     for (i = 0; i < sz; ++i) {
@@ -453,6 +458,101 @@ end:
 }
 
 #endif /* OPENSSL_NO_RFC3779 */
+
+/*
+ * nameConstraints extnValue contents with one empty directoryName subtree.
+ * Empty X509_NAME has canon_enc == NULL / canon_enclen == 0.
+ *
+ *   SEQUENCE { [0|1] { SEQUENCE { [4] { SEQUENCE {} } } } }
+ */
+static const unsigned char nc_excluded_empty_dirname[] = {
+    0x30, 0x08, 0xa1, 0x06, 0x30, 0x04, 0xa4, 0x02, 0x30, 0x00
+};
+static const unsigned char nc_permitted_empty_dirname[] = {
+    0x30, 0x08, 0xa0, 0x06, 0x30, 0x04, 0xa4, 0x02, 0x30, 0x00
+};
+
+/* Decode a raw nameConstraints extnValue into a NAME_CONSTRAINTS object. */
+static NAME_CONSTRAINTS *nc_empty_dirname_from_der(const unsigned char *der,
+    unsigned int der_len)
+{
+    NAME_CONSTRAINTS *nc = NULL;
+    ASN1_OCTET_STRING *os = NULL;
+    X509_EXTENSION *ext = NULL;
+
+    os = ASN1_OCTET_STRING_new();
+    if (!TEST_ptr(os)
+        || !TEST_true(ASN1_OCTET_STRING_set(os, der, der_len)))
+        goto end;
+    ext = X509_EXTENSION_create_by_NID(NULL, NID_name_constraints,
+        1 /* critical */, os);
+    if (!TEST_ptr(ext))
+        goto end;
+    nc = X509V3_EXT_d2i(ext);
+
+end:
+    X509_EXTENSION_free(ext);
+    ASN1_OCTET_STRING_free(os);
+    return nc;
+}
+
+/* Build a minimal certificate with a non-empty subject DN. */
+static X509 *nc_empty_dirname_subject(const char *cn)
+{
+    X509 *x = NULL;
+    X509_NAME *nm = NULL;
+
+    if (!TEST_ptr(x = X509_new()))
+        goto err;
+    nm = X509_NAME_new();
+    if (!TEST_ptr(nm)
+        || !TEST_true(X509_NAME_add_entry_by_txt(nm, "CN", MBSTRING_ASC,
+            (const unsigned char *)cn, -1, -1, 0))
+        || !TEST_true(X509_set_subject_name(x, nm)))
+        goto err;
+    X509_NAME_free(nm);
+    return x;
+
+err:
+    X509_NAME_free(nm);
+    X509_free(x);
+    return NULL;
+}
+
+/* Check an empty directoryName constraint against a non-empty subject DN. */
+static int nc_check_empty_dirname(const unsigned char *der, unsigned int der_len,
+    int expected)
+{
+    int ok = 0;
+    NAME_CONSTRAINTS *nc = NULL;
+    X509 *x = NULL;
+
+    if (!TEST_ptr(nc = nc_empty_dirname_from_der(der, der_len))
+        || !TEST_ptr(x = nc_empty_dirname_subject("leaf.example"))
+        || !TEST_int_eq(NAME_CONSTRAINTS_check(x, nc), expected))
+        goto end;
+
+    ok = 1;
+
+end:
+    X509_free(x);
+    NAME_CONSTRAINTS_free(nc);
+    return ok;
+}
+
+/* Empty excluded directoryName matches the subject DN: excluded violation. */
+static int test_nc_empty_dirname_excluded(void)
+{
+    return nc_check_empty_dirname(nc_excluded_empty_dirname,
+        sizeof(nc_excluded_empty_dirname), X509_V_ERR_EXCLUDED_VIOLATION);
+}
+
+/* Empty permitted directoryName matches the subject DN: permitted. */
+static int test_nc_empty_dirname_permitted(void)
+{
+    return nc_check_empty_dirname(nc_permitted_empty_dirname,
+        sizeof(nc_permitted_empty_dirname), X509_V_OK);
+}
 
 OPT_TEST_DECLARE_USAGE("cert.pem\n")
 
@@ -474,5 +574,7 @@ int setup_tests(void)
     ADD_TEST(test_addr_fam_len);
     ADD_TEST(test_addr_subset);
 #endif /* OPENSSL_NO_RFC3779 */
+    ADD_TEST(test_nc_empty_dirname_excluded);
+    ADD_TEST(test_nc_empty_dirname_permitted);
     return 1;
 }
